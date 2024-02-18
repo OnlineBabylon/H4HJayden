@@ -7,6 +7,11 @@ import Sidebar from './Sidebar';
 import DonationRequest from './DonationRequest';
 import RestaurantDonationForm from './RestaurantDonationForm.js';
 import Restaurant from './Restaurant';
+import RestaurantEdit from './RestaurantEdit';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
+//import LeafletMap from './Leaflet';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -56,6 +61,7 @@ function App() {
           <Route path="/donation-request" element={<DonationRequest />} />
           <Route path="/restaurant-donation-form" element={<RestaurantDonationForm />} />
           <Route path="/restaurant" element={<Restaurant/>} />
+          <Route path="/restaurantEdit" element={<RestaurantEdit/>} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
