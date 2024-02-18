@@ -11,7 +11,7 @@ function Restaurant()
             break;
         */
         case 'edit':
-            navigate('/donation-request');
+            navigate('/restaurantEdit');
             break;
         case 'make':
             navigate('/donation-request');
