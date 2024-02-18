@@ -7,6 +7,10 @@ import Sidebar from './Sidebar';
 import DonationRequest from './DonationRequest';
 import RestaurantDonationForm from './RestaurantDonationForm.js';
 import Restaurant from './Restaurant';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
+import LeafletMap from './Leaflet';
 
 function App() {
   const [user, setUser] = useState(null);
