@@ -1,38 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { db } from './firebaseconfig'; // Adjust the path as necessary
-import { collection, getDocs } from 'firebase/firestore';
+import { db } from './firebaseconfig';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { Card, Button, Carousel, Row, Col, Badge } from 'react-bootstrap';
 
 const DonationsList = () => {
   const [donations, setDonations] = useState([]);
 
   useEffect(() => {
-    const fetchDonations = async () => {
-      const donationsCollectionRef = collection(db, "donations");
-      const data = await getDocs(donationsCollectionRef);
-      setDonations(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-    };
-
     fetchDonations();
   }, []);
 
-  const chunkArray = (arr, size) =>
-    arr.reduce((acc, e, i) => {
+  const fetchDonations = async () => {
+    const donationsCollectionRef = collection(db, "donations");
+    const data = await getDocs(donationsCollectionRef);
+    setDonations(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+  };
+
+  const handleAccept = async (donationId) => {
+    const donationRef = doc(db, "donations", donationId);
+    try {
+      await deleteDoc(donationRef);
+      console.log(`Donation with ID ${donationId} has been deleted.`);
+      fetchDonations(); // Refresh the donations list
+    } catch (error) {
+      console.error("Error deleting donation:", error);
+    }
+  };
+
+  // Helper function to chunk the array
+  const chunkArray = (arr, size) => {
+    return arr.reduce((acc, e, i) => {
       if (i % size === 0) acc.push([]);
       acc[acc.length - 1].push(e);
       return acc;
     }, []);
+  };
 
   // Group donations into chunks of three
   const donationChunks = chunkArray(donations, 3);
-
-  // Function to render tags based on donation categories
-  const renderTags = (donation) => {
-    const categories = ['bakery', 'dairy', 'fruits', 'meat', 'prepared', 'vegetables'];
-    return categories.map((category) =>
-      donation[category] === 'on' ? <Badge bg="secondary" className="me-2">{category}</Badge> : null
-    );
-  };
 
   return (
     <div>
@@ -49,18 +54,8 @@ const DonationsList = () => {
                     )}
                     <Card.Body>
                       <Card.Title>{donation.name}</Card.Title>
-                      <Card.Text>
-                        {donation.description}
-                        <div className="mt-3">
-                          {renderTags(donation)}
-                        </div>
-                      </Card.Text>
-                      {donation.contactInfo && (
-                        <div className="mb-3">
-                          <Badge bg="danger">Contact # {donation.contactInfo}</Badge>
-                        </div>
-                      )}
-                      <Button variant="primary">Accept</Button>
+                      <Card.Text>{donation.description}</Card.Text>
+                      <Button variant="primary" onClick={() => handleAccept(donation.id)}>Accept</Button>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -69,24 +64,8 @@ const DonationsList = () => {
           </Carousel.Item>
         ))}
       </Carousel>
-      <style>
-  {`
-    .carousel-indicators li {
-      background-color: black !important;
-    }
-
-    .carousel-indicators .active {
-      background-color: black !important;
-    }
-  `}
-</style>
-
     </div>
-    
   );
-
-
-
 };
 
 export default DonationsList;
