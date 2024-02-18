@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import React, { useState, useEffect } from 'react';
 import { getAuth } from "firebase/auth";
+import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 
 import {
     doc, 
@@ -8,22 +9,27 @@ import {
     query,
     where,
     onSnapshot,
-    getDocs
+    getDocs, 
+    deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebaseconfig'; // Adjust this path
 
+
+var init = 0;
+
 function RestaurantEdit()
 {
+    const [donations, setDonations] = useState([]);
+    const [deleteID, setDeleteID] = useState({});
+    const navigate = useNavigate(); // Initialize useNavigate
+
     const auth = getAuth();
     const user = auth.currentUser;
     if (user !== null) {
-        // The user object has basic properties such as display name, email, etc.
-        const displayName = user.displayName;
-        const email = user.email;
+    // The user object has basic properties such as display name, email, etc.
+    const displayName = user.displayName;
+    const email = user.email;
     }
-    
-    const navigate = useNavigate(); // Initialize useNavigate
-    const [donations, setDonations] = useState([]);
 
     useEffect(() => {
         const fetchDonations = async () => {
@@ -37,17 +43,11 @@ function RestaurantEdit()
                 console.log(restaurantDonations)
                 setDonations(restaurantDonations)
           })
-          /*
-          const donationsSnapshot = await getDocs(donationsCollection);
-          const donationsList = donationsSnapshot.docs.map(doc => doc.data());
-          setDonations(donationsList);
-          */
         };
         fetchDonations();
       }, []);
 
 
-    
     const handleUserSelect = (userType) => {
         switch(userType) {
         case 'back':
@@ -58,8 +58,25 @@ function RestaurantEdit()
         }
     };
 
+    const deleteForm = document.querySelector('.delete')
+    if (deleteForm)
+    {
+        deleteForm.addEventListener('submit',(e) => 
+        {
+            e.preventDefault()
+
+            const formRef = doc(db, 'donations', deleteForm.id.value)
+            deleteDoc(formRef)
+                .then(() => {
+                    deleteForm.reset()
+                })
+        })
+    }
 
     return (
+        <form class="delete">
+        <input type="text" name="id" placeholder = "Enter ID to be deleted" required></input>
+        <button>Delete</button>
         <div>
         <br></br>
         <button onClick={() => handleUserSelect('back')}>back</button>
@@ -72,6 +89,7 @@ function RestaurantEdit()
             </div>
           ))}
         </div>
+        </form>
       );
 }
 
