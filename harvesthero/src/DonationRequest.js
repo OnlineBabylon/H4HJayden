@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
-import { db, storage } from './firebaseconfig'; // Adjust this path
+import { db, storage } from './firebaseconfig'; // Adjust this path accordingly
 import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { OpenStreetMapProvider } from 'leaflet-geosearch';
+import { useNavigate } from 'react-router-dom';
 
 const DonationRequest = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const [formData, setFormData] = useState({
     address: '',
     contactInfo: '',
@@ -19,8 +23,9 @@ const DonationRequest = () => {
     expiration: '',
     image: null,
   });
+
   
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -35,6 +40,22 @@ const DonationRequest = () => {
     e.preventDefault();
     const ErrorChecks = validateForm();
     if (Object.keys(ErrorChecks).length === 0) {
+      // Initialize the geocoding provider
+      const provider = new OpenStreetMapProvider();
+
+      // Use the provider to search for the address
+      const results = await provider.search({ query: formData.address });
+      if (results && results.length > 0) {
+        // Assuming you want to use the first result
+        const { x, y } = results[0]; // x is longitude, y is latitude
+        // Now you can use these coordinates to center your map, etc.
+        console.log(`Coordinates: ${y}, ${x}`); // Example usage
+        // Update your map component or state as needed here
+      } else {
+        console.error("Geocoding found no results for this address.");
+        return;
+      }
+
       let imageUrl = null;
       if (formData.image) {
         const storageRef = ref(storage, `images/${formData.image.name}`);
@@ -43,30 +64,27 @@ const DonationRequest = () => {
           imageUrl = await getDownloadURL(snapshot.ref);
         } catch (error) {
           console.error("Error uploading image: ", error);
-          // Optionally, handle the upload error (e.g., by setting an error state and displaying it to the user)
-          return; // Exit the function if image upload fails
+          return;
         }
       }
-  
-      // Prepare document data, excluding the File object and not setting image to undefined
+
       const docData = {
         ...formData,
-        imageUrl: imageUrl || null, // Use null instead of undefined if there's no image URL
+        imageUrl: imageUrl || null,
       };
-      delete docData.image; // Remove the image file object from the data to be stored in Firestore
-  
+      delete docData.image;
+
       try {
         const docRef = await addDoc(collection(db, "donations"), docData);
         console.log("Document written with ID: ", docRef.id);
-        // Handle successful submission (e.g., clearing the form, showing a success message)
       } catch (error) {
         console.error("Error adding document: ", error);
-        // Optionally, handle the Firestore error
       }
     } else {
       setErrors(ErrorChecks);
     }
   };
+
   
   
   const validateForm = ()=>{

@@ -12,57 +12,17 @@ import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
 import LeafletMap from './Leaflet';
 
+
 function App() {
-  const [user, setUser] = useState(null);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-      setLoggedIn(!!user);
-      if (user) {
-        setUserProfile({
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL
-        });
-      } else {
-        setUserProfile(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleGoogleLogin = () => {
-    auth.signInWithRedirect(googleProvider);
-  };
-
-  const handleUserSelect = (userType) => {
-    console.log('Selected user type:', userType);
-  };
+  const addresses = [
+    { name: 'Place 1', lat: 40.7128, lng: -74.0060 },
+    { name: 'Place 2', lat: 40.7138, lng: -74.0010 },
+    // Add more addresses within your radius
+  ];
 
   return (
     <div className="App">
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login onGoogleLogin={handleGoogleLogin} />} />
-          <Route path="/user-selection" element={loggedIn ? (
-              <>
-                <Sidebar userProfile={userProfile} />
-                <UserSelectionPage onUserSelect={handleUserSelect} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )}
-          />
-          <Route path="/donation-request" element={<DonationRequest />} />
-          <Route path="/restaurant-donation-form" element={<RestaurantDonationForm />} />
-          <Route path="/restaurant" element={<Restaurant/>} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+      <LeafletMap center={[40.7128, -74.0060]} zoom={13} addresses={addresses} />
     </div>
   );
 }
