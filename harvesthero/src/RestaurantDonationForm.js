@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { db, storage } from './firebaseconfig'; // Adjust this path
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getAuth } from "firebase/auth";
+
 
 const RestaurantDonationForm = () => {
   const [formData, setFormData] = useState({
@@ -13,7 +18,16 @@ const RestaurantDonationForm = () => {
     meat: '',
     dairy: '',
     prepared: '',
+    email: '',
   });
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (user !== null) {
+    // The user object has basic properties such as display name, email, etc.
+    const email = user.email;
+    formData.email = email;
+  }
 
   const [errors, setErrors] = useState({})
 
@@ -26,25 +40,44 @@ const RestaurantDonationForm = () => {
     setFormData({ ...formData, image: e.target.files[0] });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const ErrorChecks = validateForm()
-    if (Object.keys(ErrorChecks).length > 0)
-    {
+    const ErrorChecks = validateForm();
+    if (Object.keys(ErrorChecks).length === 0) {
+      let imageUrl = null;
+      if (formData.image) {
+        const storageRef = ref(storage, `images/${formData.image.name}`);
+        try {
+          const snapshot = await uploadBytes(storageRef, formData.image);
+          imageUrl = await getDownloadURL(snapshot.ref);
+        } catch (error) {
+          console.error("Error uploading image: ", error);
+          // Optionally, handle the upload error (e.g., by setting an error state and displaying it to the user)
+          return; // Exit the function if image upload fails
+        }
+      }
+  
+      // Prepare document data, excluding the File object and not setting image to undefined
+      const docData = {
+        ...formData,
+        imageUrl: imageUrl || null, // Use null instead of undefined if there's no image URL
+      };
+      delete docData.image; // Remove the image file object from the data to be stored in Firestore
+  
+      try {
+        const docRef = await addDoc(collection(db, "restaurants"), docData);
+        console.log("Document written with ID: ", docRef.id);
+        // Handle successful submission (e.g., clearing the form, showing a success message)
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        // Optionally, handle the Firestore error
+      }
+    } else {
       setErrors(ErrorChecks);
-    }
-    else
-    {
-      const resetErrors = {};
-      setErrors(resetErrors) 
-      console.log(formData);
-
     }
   };
 
   const validateForm = ()=>{
-    //const {address, contactInfo, foodType, Distance, name, expiration, image} = formData
     const errors = {};
     if (!validateNumber(formData.contactInfo))
     {
@@ -93,11 +126,12 @@ const RestaurantDonationForm = () => {
 
             <Form.Group className="mb-3" controlId="Distance">
               <Form.Label>How Far Are You Willing To Travel?</Form.Label>
-              <Form.Select>
-                name="foodType"
+              <Form.Select
+                name="Distance"
                 value={formData.Distance}
                 onChange={handleInputChange}
                 required
+              >
                 <option value="">Select Range</option>
                 <option value="1-5 miles">1-5 miles</option>
                 <option value="5-10 miles">5-10 miles</option>
@@ -141,7 +175,6 @@ const RestaurantDonationForm = () => {
               />
             </Form.Group>
 
-  
             <Button variant="primary" type="submit">
               Submit
             </Button>
