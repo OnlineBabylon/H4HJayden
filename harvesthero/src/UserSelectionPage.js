@@ -1,16 +1,13 @@
 import React, { useEffect } from 'react';
 import { auth } from './firebase';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import { Button, Container, Row, Col } from 'react-bootstrap'; // Import React Bootstrap components
 
 function UserSelectionPage() {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const handleUserSelect = (userType) => {
     switch(userType) {
-      /*case 'volunteer':
-        navigate('/donation-request');
-        break;
-      */
       case 'foodbank':
         navigate('/restaurant-donation-form');
         break;
@@ -25,11 +22,9 @@ function UserSelectionPage() {
   const handleLogout = () => {
     auth.signOut()
       .then(() => {
-        // Log out successful
         console.log('User logged out successfully.');
       })
       .catch((error) => {
-        // An error occurred while logging out
         console.error('Error logging out:', error);
       });
   };
@@ -37,26 +32,36 @@ function UserSelectionPage() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        // User is logged in, log a message to the console
         console.log('User logged in successfully.');
       } else {
-        // User is not logged in, log a message to the console
         console.log('User is not logged in.');
       }
     });
 
-    // Clean up the subscription on unmount
     return () => unsubscribe();
-  }, []); // Run this effect only once on component mount
+  }, []);
 
   return (
-    <div>
-      <h2>Select User Type</h2>
-      <button onClick={() => handleUserSelect('foodbank')}>Login as Foodbank</button>
-      <button onClick={() => handleUserSelect('restaurant')}>Login as Restaurant/Grocery Store</button>
-      
-      <button onClick={handleLogout}>Logout</button> {/* Add logout button */}
-    </div>
+    <Container className="mt-5">
+      <Row className="justify-content-md-center">
+        <Col md="auto">
+          <h2>Select User Type</h2>
+        </Col>
+      </Row>
+      <Row className="justify-content-md-center mt-3">
+        <Col md="auto">
+          <Button variant="primary" onClick={() => handleUserSelect('foodbank')}>Login as Foodbank</Button>
+        </Col>
+        <Col md="auto">
+          <Button variant="secondary" onClick={() => handleUserSelect('restaurant')}>Login as Restaurant/Grocery Store</Button>
+        </Col>
+      </Row>
+      <Row className="justify-content-md-center mt-3">
+        <Col md="auto">
+          <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 
