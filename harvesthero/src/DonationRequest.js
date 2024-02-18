@@ -3,6 +3,8 @@ import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { db, storage } from './firebaseconfig'; // Adjust this path
 import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getAuth } from "firebase/auth";
+
 
 const DonationRequest = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +24,14 @@ const DonationRequest = () => {
   
   const [errors, setErrors] = useState({})
 
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (user !== null) {
+    // The user object has basic properties such as display name, email, etc.
+    const email = user.email;
+    formData.email = email;
+  }
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
